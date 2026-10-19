@@ -7,7 +7,8 @@
  *  - Scroll automático al último mensaje
  *  - Input: "Ask JARVIS anything..."
  *
- * Simulación local de respuesta (Fase 3 conectará /backend/api/ai).
+ * Fase 6: conectado al backend FastAPI (/backend/api/ai/chat vía rewrite).
+ * Fallback a respuestas simuladas si el backend está caído o sin configurar.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -90,7 +91,58 @@ function MessageRow({ msg, isLastJarvis, onDone }: {
 }
 
 /* ------------------------------------------------------------------ */
-/* Respuestas simuladas (Fase 3: reemplazar por llamada al backend)   */
+/* Cliente del backend (Fase 6)                                        */
+/* ------------------------------------------------------------------ */
+
+interface BackendSource {
+  file: string;
+  chunk_index?: number;
+  relevance_score: number;
+}
+
+interface BackendChatResponse {
+  response: string;
+  sources: BackendSource[];
+  tokens_used: number;
+  cached?: boolean;
+  used_repo_context?: boolean;
+}
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL !== undefined
+    ? `${process.env.NEXT_PUBLIC_API_URL}`
+    : "/backend"; // rewrite de next.config.js -> FastAPI en desarrollo
+
+async function askJarvis(
+  message: string,
+  history: { role: "user" | "assistant"; content: string }[],
+): Promise<BackendChatResponse> {
+  const res = await fetch(`${API_BASE}/api/ai/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      use_repo_context: true,
+      conversation_history: history.slice(-8),
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null);
+    throw new Error(detail?.detail ?? `HTTP ${res.status}`);
+  }
+  return (await res.json()) as BackendChatResponse;
+}
+
+function formatSources(sources: BackendSource[]): string {
+  if (!sources.length) return "";
+  const lines = sources
+    .slice(0, 4)
+    .map((s) => `📄 ${s.file} (${Math.round(s.relevance_score * 100)}%)`);
+  return ["", "— Fuentes del repositorio —", ...lines].join("\n");
+}
+
+/* ------------------------------------------------------------------ */
+/* Fallback: respuestas simuladas si el backend no está disponible    */
 /* ------------------------------------------------------------------ */
 
 const CANNED: string[] = [
@@ -115,7 +167,18 @@ export default function ChatPanel() {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, typingId]);
 
-  const send = useCallback(() => {
+  const deliverReply = useCallback(
+    (reply: string) => {
+      setState("speaking");
+      addMessage("jarvis", reply);
+      bumpTokens(reply);
+      setTypingId(`jarvis-${Date.now()}`);
+      setPendingSpeech(reply);
+    },
+    [addMessage, setState, bumpTokens, setPendingSpeech],
+  );
+
+  const send = useCallback(async () => {
     const text = input.trim();
     if (!text) return;
     setInput("");
@@ -123,20 +186,25 @@ export default function ChatPanel() {
     bumpTokens(text);
     setState("thinking");
 
-    // Simula latencia del agente RAG → luego "habla" la respuesta.
-    // pendingSpeech hace que VoiceController la pronuncie con TTS
-    // (Fase 3: el habla y el typewriter comparten el mismo texto).
-    setTimeout(() => {
+    // Historia para el backend (excluye el mensaje recién añadido)
+    const history = messages
+      .slice(-8)
+      .map((m) => ({
+        role: m.role === "jarvis" ? ("assistant" as const) : ("user" as const),
+        content: m.content,
+      }));
+
+    try {
+      const data = await askJarvis(text, history);
+      deliverReply(data.response + formatSources(data.sources));
+    } catch {
+      // Backend caído / sin OPENAI_API_KEY → modo demo con fallback local
       const reply = CANNED[replyIdx.current % CANNED.length];
       replyIdx.current += 1;
-      const id = `jarvis-${Date.now()}`;
-      setState("speaking");
-      addMessage("jarvis", reply);
-      bumpTokens(reply);
-      setTypingId(id);
-      setPendingSpeech(reply);
-    }, 900);
-  }, [input, addMessage, setState, bumpTokens, setPendingSpeech]);
+      // Latencia simulada del agente RAG antes de "hablar"
+      setTimeout(() => deliverReply(reply), 900);
+    }
+  }, [input, messages, addMessage, setState, bumpTokens, deliverReply]);
 
   const lastMsg = messages[messages.length - 1];
   const isTypingDone = typingId !== null && lastMsg?.role === "jarvis";

@@ -142,7 +142,7 @@ export function SoundProvider({
   useEffect(() => {
     const onVis = () => {
       if (document.hidden) Howler.mute(true);
-      else if (!muted) Howler.unmute();
+      else if (!muted) Howler.mute(false);
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);

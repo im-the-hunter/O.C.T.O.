@@ -9,9 +9,16 @@
  * - 4 botones de prueba en la parte inferior central para
  *   cambiar manualmente el estado del núcleo
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import JarvisHUD from "@/app/components/JarvisHUD";
 import type { JarvisStatus } from "@/app/components/JarvisCore";
+import { JarvisProvider, useJarvis, type JarvisState } from "@/lib/jarvis-state";
+import { SoundProvider } from "@/lib/sound/SoundManager";
+import HudBackground from "@/components/hud/HudBackground";
+import ParticleField from "@/components/core/ParticleField";
+import ScanLine from "@/components/hud/ScanLine";
+import ChatPanel from "@/components/chat/ChatPanel";
+import VoiceController from "@/components/hud/VoiceController";
 
 const STATUS_BUTTONS: { label: string; value: JarvisStatus }[] = [
   { label: "IDLE", value: "idle" },
@@ -20,13 +27,46 @@ const STATUS_BUTTONS: { label: string; value: JarvisStatus }[] = [
   { label: "SPEAK", value: "speaking" },
 ];
 
-export default function Home() {
-  const [jarvisStatus, setJarvisStatus] = useState<JarvisStatus>("idle");
+const STATUS_TO_STATE: Record<string, JarvisState> = {
+  idle: "idle",
+  listening: "listening",
+  thinking: "thinking",
+  speaking: "speaking",
+};
 
+/** Puente: sincroniza el estado local de prueba con el estado global. */
+function StatusBridge({ status }: { status: JarvisStatus }) {
+  const { setState } = useJarvis();
+  useEffect(() => {
+    setState(STATUS_TO_STATE[status] ?? "idle");
+  }, [status, setState]);
+  return null;
+}
+
+function Interface({
+  jarvisStatus,
+  setJarvisStatus,
+}: {
+  jarvisStatus: JarvisStatus;
+  setJarvisStatus: (s: JarvisStatus) => void;
+}) {
   return (
     <main className="fixed inset-0 h-screen w-screen overflow-hidden bg-[#050505]">
-      {/* HUD completo con el núcleo centrado (recibe el estado actual) */}
+      {/* Capas ambientales: rejilla en perspectiva, partículas y scanline */}
+      <HudBackground />
+      <ParticleField />
+      <ScanLine />
+
+      {/* HUD completo (esquinas + núcleo central) */}
       <JarvisHUD status={jarvisStatus} />
+
+      {/* Panel de chat — lateral derecho en desktop, inferior en móvil */}
+      <div className="pointer-events-auto fixed right-0 bottom-16 left-0 z-40 h-[38vh] md:top-0 md:left-auto md:h-full md:w-[400px] md:bottom-0">
+        <ChatPanel />
+      </div>
+
+      {/* Orquestador de voz (Fase 3): wake word, TTS, comandos especiales */}
+      <VoiceController />
 
       {/* Botones de prueba de estados — parte inferior central */}
       <div className="pointer-events-auto fixed bottom-6 left-1/2 z-[100] flex -translate-x-1/2 gap-3">
@@ -53,5 +93,38 @@ export default function Home() {
         })}
       </div>
     </main>
+  );
+}
+
+/** Nivel interno: ya dentro de JarvisProvider, conecta el estado global al sonido. */
+function InterfaceRoot({
+  jarvisStatus,
+  setJarvisStatus,
+}: {
+  jarvisStatus: JarvisStatus;
+  setJarvisStatus: (s: JarvisStatus) => void;
+}) {
+  const { state } = useJarvis();
+  return (
+    <SoundProvider state={state}>
+      <StatusBridge status={jarvisStatus} />
+      <Interface
+        jarvisStatus={jarvisStatus}
+        setJarvisStatus={setJarvisStatus}
+      />
+    </SoundProvider>
+  );
+}
+
+export default function Home() {
+  const [jarvisStatus, setJarvisStatus] = useState<JarvisStatus>("idle");
+
+  return (
+    <JarvisProvider>
+      <InterfaceRoot
+        jarvisStatus={jarvisStatus}
+        setJarvisStatus={setJarvisStatus}
+      />
+    </JarvisProvider>
   );
 }

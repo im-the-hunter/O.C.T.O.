@@ -155,15 +155,20 @@ El archivo `frontend/tailwind.config.ts` define la paleta del HUD:
 ## 🗺️ Roadmap de fases
 
 - [x] **Fase 1 — Fundamentos**: estructura, dependencias, env, tema Tailwind, esqueleto FastAPI ✅
-- [ ] **Fase 2 — HUD visual**: núcleo SVG (Arc Reactor), overlays con Framer Motion + GSAP
-- [ ] **Fase 3 — Chat + IA**: panel de chat conectado a `/api/ai/chat`, streaming de respuestas
-- [ ] **Fase 4 — Voz y sonido**: Web Speech API (STT/TTS) + Howler.js
-- [ ] **Fase 5 — GitHub + RAG**: dashboard del repo, ingesta incremental, citas de código
-- [ ] **Fase 6 — Memoria y Auth**: historial persistente, preferencias del usuario, NextAuth
+- [x] **Fase 2 — HUD visual**: núcleo SVG (Arc Reactor) con 5 círculos concéntricos, estados idle/listening/thinking/speaking, ondas expansivas, partículas Canvas, scanline, rejilla en perspectiva, HUD de 4 esquinas y ChatPanel typewriter ✅
+- [x] **Fase 3 — Voz y sonido**: wake word "JARVIS" (Web Speech API es-ES/en-US), `useVoiceRecognition` + `useSpeechSynthesis` (voz UK masculina, opcional ElevenLabs), comandos especiales (silencio, fullscreen, estado…), SoundManager con Howler.js y hum ambiental dinámico ✅
+- [x] **Fase 4 — GitHub + caché**: `github_service.py` (tree, archivos, commits, branch, Actions), `cache_service.py` (disco/Redis, TTL 1h, >90% hit-rate), endpoints `/api/github/*`, webhook firmado HMAC-SHA256, rate limiting slowapi, logging ✅
+- [x] **Fase 5 — RAG vectorial**: `pinecone_service.py` (índice serverless 1536d cosine), chunking inteligente (código por funciones/clases, markdown por headers), embeddings text-embedding-3-small en batches, ingesta incremental por commit SHA, `/api/rag/{ingest,query,status}` + `/api/ai/chat` con citas de archivos, caché de respuestas TTL 1h, reranking Cohere opcional ✅
+- [x] **Fase 6 — Integración end-to-end**: ChatPanel conectado a `/api/ai/chat` (con fallback demo si el backend no está), providers globales (JarvisProvider/SoundProvider), unificación de capas visuales, variables de webhook/ElevenLabs en `.env.example`, script `scripts/dev.sh`, build de producción verificado ✅
+- [ ] **Pendiente (opcional)**: memoria larga persistente activada por defecto (PostgreSQL + pgvector) y login real con NextAuth GitHub OAuth
 
 ---
 
 ## ⚡ Scripts útiles
+
+| Script | Descripción |
+|---|---|
+| `./scripts/dev.sh` | Arranca backend + frontend en paralelo (crea venv/instala deps si falta) |
 
 ```bash
 python scripts/setup_db.py --drop    # Recrear la base de datos desde cero

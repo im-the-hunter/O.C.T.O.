@@ -1,70 +1,57 @@
-/**
- * Página principal del HUD de J.A.R.V.I.S. (Fase 2)
- * Composición: fondo con grid en perspectiva → partículas → núcleo →
- * telemetría HUD → scanline → panel de chat (lateral en desktop,
- * inferior en móvil).
- */
-import dynamic from "next/dynamic";
-import { JarvisProvider, useJarvis } from "@/lib/jarvis-state";
-import { SoundProvider } from "@/lib/sound/SoundManager";
-import JarvisHUD from "@/components/hud/JarvisHUD";
-import HudBackground from "@/components/hud/HudBackground";
-import ScanLine from "@/components/hud/ScanLine";
-import VoiceController from "@/components/hud/VoiceController";
+"use client";
 
-// El núcleo y las partículas usan canvas/GSAP: sólo cliente, sin SSR.
-const JarvisCore = dynamic(() => import("@/components/core/JarvisCore"), {
-  ssr: false,
-});
-const ParticleField = dynamic(() => import("@/components/core/ParticleField"), {
-  ssr: false,
-});
-const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel"), {
-  ssr: false,
-});
+/**
+ * Página principal de J.A.R.V.I.S.
+ *
+ * - Renderiza el JarvisHUD a pantalla completa (sin scroll)
+ * - Estado local `jarvisStatus` que comienza en 'idle'
+ * - El estado se pasa al HUD, que lo reenvía a JarvisCore
+ * - 4 botones de prueba en la parte inferior central para
+ *   cambiar manualmente el estado del núcleo
+ */
+import { useState } from "react";
+import JarvisHUD from "@/app/components/JarvisHUD";
+import type { JarvisStatus } from "@/app/components/JarvisCore";
+
+const STATUS_BUTTONS: { label: string; value: JarvisStatus }[] = [
+  { label: "IDLE", value: "idle" },
+  { label: "LISTEN", value: "listening" },
+  { label: "THINK", value: "thinking" },
+  { label: "SPEAK", value: "speaking" },
+];
 
 export default function Home() {
+  const [jarvisStatus, setJarvisStatus] = useState<JarvisStatus>("idle");
+
   return (
-    <JarvisProvider>
-      <SoundGate>
-        <main className="relative h-screen w-screen overflow-hidden bg-[#050505]">
-          {/* Capa 0: rejilla con perspectiva */}
-          <HudBackground />
+    <main className="fixed inset-0 h-screen w-screen overflow-hidden bg-[#050505]">
+      {/* HUD completo con el núcleo centrado (recibe el estado actual) */}
+      <JarvisHUD status={jarvisStatus} />
 
-          {/* Capa 0.5: partículas orbitando el núcleo */}
-          <ParticleField />
-
-          {/* Capa 1: núcleo SVG centrado (desplazado a la izquierda en desktop
-              para compensar el panel de chat lateral de 400px) */}
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center lg:pr-[400px]">
-            <JarvisCore />
-          </div>
-
-          {/* Capa 2: telemetría en las 4 esquinas */}
-          <JarvisHUD />
-
-          {/* Capa 3: scanline global */}
-          <ScanLine />
-
-          {/* Capa 4: panel de chat — lateral derecho (desktop) / inferior (móvil) */}
-          <aside className="pointer-events-auto fixed bottom-0 right-0 z-50 h-[300px] w-full p-3 md:p-4 lg:bottom-0 lg:right-0 lg:h-full lg:w-[400px] lg:p-6">
-            <ChatPanel />
-          </aside>
-
-          {/* Capa 5 (Fase 3): orquestador de voz + barra de control */}
-          <VoiceController />
-        </main>
-      </SoundGate>
-    </JarvisProvider>
+      {/* Botones de prueba de estados — parte inferior central */}
+      <div className="pointer-events-auto fixed bottom-6 left-1/2 z-[100] flex -translate-x-1/2 gap-3">
+        {STATUS_BUTTONS.map(({ label, value }) => {
+          const active = jarvisStatus === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setJarvisStatus(value)}
+              className="rounded border border-[#00f3ff] bg-transparent px-3 py-1 font-mono text-xs uppercase tracking-widest text-[#00f3ff] transition-colors duration-200 hover:bg-[#00f3ff] hover:text-black focus:outline-none focus:ring-1 focus:ring-[#00f3ff]/60"
+              style={{
+                boxShadow: active
+                  ? "0 0 10px rgba(0,243,255,0.8), inset 0 0 6px rgba(0,243,255,0.4)"
+                  : "0 0 4px rgba(0,243,255,0.35)",
+                ...(active
+                  ? { backgroundColor: "#00f3ff", color: "#000" }
+                  : null),
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </main>
   );
-}
-
-/**
- * Envuelve el HUD en SoundProvider passing the current JarvisState so
- * the ambient-hum volume tracks system activity. Needs its own component
- * to consume the context.
- */
-function SoundGate({ children }: { children: React.ReactNode }) {
-  const { state } = useJarvis();
-  return <SoundProvider state={state}>{children}</SoundProvider>;
 }

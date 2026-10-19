@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Entorno / secretos
+.env
+.env.local
+.env.*.local
+
+# Builds
+.next/
+out/
+dist/
+build/
+
+# Next.js
+next-env.d.ts
+*.tsbuildinfo
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*

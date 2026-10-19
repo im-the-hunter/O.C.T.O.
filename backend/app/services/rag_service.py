@@ -389,6 +389,63 @@ class RAGService:
             total += len(batch)
         return total
 
+    # -- Ingesta unitaria (endpoint POST /api/rag/ingest con file_path) ----------
+    async def ingest_single_file(
+        self,
+        file_path: str,
+        content: str,
+        *,
+        sha: str = "",
+        last_modified: str = "",
+        force: bool = True,
+    ) -> dict[str, Any]:
+        """Vectoriza UN archivo concreto (delete-old + upsert-new).
+
+        Se apoya en la misma lógica incremental de `ingest_from_snapshot` pero
+        limitada a un único path — útil para webhooks push o re-ingesta puntual.
+        Devuelve {"file_path", "chunks_upserted", "skipped"}.
+        """
+        existing = await self._fetch_existing_shas(force=False)
+        if (
+            not force
+            and file_path in existing
+            and existing[file_path] == sha
+            and sha
+        ):
+            logger.info("Skip %s: commit_sha sin cambios (%s)", file_path, sha)
+            return {"file_path": file_path, "chunks_upserted": 0, "skipped": True}
+
+        chunks = chunk_file(
+            file_path,
+            content,
+            chunk_tokens=settings.rag_chunk_tokens,
+            overlap_tokens=settings.rag_chunk_overlap_tokens,
+        )
+        if not chunks:
+            return {"file_path": file_path, "chunks_upserted": 0, "skipped": True}
+
+        if file_path in existing:
+            await self._delete_file_chunks(file_path)
+
+        docs = [{
+            "id": chunk_id(file_path, c.index),
+            "content": c.text,
+            "metadata": {
+                "file_path": file_path,
+                "chunk_index": c.index,
+                "total_chunks": c.total,
+                "language": c.metadata.get("language", "text"),
+                "folder": file_path.rsplit("/", 1)[0] if "/" in file_path else "",
+                "last_modified": last_modified,
+                "commit_sha": sha,
+                "repo": settings.repo_full_name,
+            },
+        } for c in chunks]
+
+        upserted = await self.upsert_documents(docs)
+        logger.info("Ingesta unitaria %s: %d chunks", file_path, upserted)
+        return {"file_path": file_path, "chunks_upserted": upserted, "skipped": False}
+
     # -- Búsqueda ----------------------------------------------------------------
     async def search_repository(
         self,

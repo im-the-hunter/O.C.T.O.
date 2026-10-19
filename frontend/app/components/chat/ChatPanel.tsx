@@ -102,7 +102,8 @@ const CANNED: string[] = [
 ];
 
 export default function ChatPanel() {
-  const { messages, addMessage, setState, bumpTokens } = useJarvis();
+  const { messages, addMessage, setState, bumpTokens, setPendingSpeech, voiceInterim, state } =
+    useJarvis();
   const [input, setInput] = useState("");
   const [typingId, setTypingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -122,7 +123,9 @@ export default function ChatPanel() {
     bumpTokens(text);
     setState("thinking");
 
-    // Simula latencia del agente RAG → luego "habla" la respuesta
+    // Simula latencia del agente RAG → luego "habla" la respuesta.
+    // pendingSpeech hace que VoiceController la pronuncie con TTS
+    // (Fase 3: el habla y el typewriter comparten el mismo texto).
     setTimeout(() => {
       const reply = CANNED[replyIdx.current % CANNED.length];
       replyIdx.current += 1;
@@ -131,8 +134,9 @@ export default function ChatPanel() {
       addMessage("jarvis", reply);
       bumpTokens(reply);
       setTypingId(id);
+      setPendingSpeech(reply);
     }, 900);
-  }, [input, addMessage, setState, bumpTokens]);
+  }, [input, addMessage, setState, bumpTokens, setPendingSpeech]);
 
   const lastMsg = messages[messages.length - 1];
   const isTypingDone = typingId !== null && lastMsg?.role === "jarvis";
@@ -159,6 +163,19 @@ export default function ChatPanel() {
           <div className="flex justify-start">
             <span className="animate-jarvis-flicker font-tech text-xs text-holo-light">
               ▍ JARVIS está procesando…
+            </span>
+          </div>
+        )}
+
+        {/* Fase 3: transcript del micrófono en tiempo real */}
+        {state === "listening" && voiceInterim && (
+          <div className="flex justify-end">
+            <span className="max-w-[85%] border border-listening/40 bg-listening/5 px-3 py-2 font-tech text-xs text-listening">
+              <span className="mr-2 text-[9px] uppercase tracking-widest opacity-60">
+                🎙 Voz
+              </span>
+              {voiceInterim}
+              <span className="ml-1 inline-block h-3 w-1.5 animate-jarvis-blink bg-listening align-middle" />
             </span>
           </div>
         )}

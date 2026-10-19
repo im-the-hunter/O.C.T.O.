@@ -72,10 +72,28 @@ function TelemetryRow({
 /* ------------------------------------------------------------------ */
 
 export default function JarvisHUD() {
-  const { state, metrics } = useJarvis();
+  const { state, metrics, voiceActive, voiceError } = useJarvis();
   const now = useClock();
   const cpu = useSimulatedLoad(metrics.cpu, 6);
   const mem = useSimulatedLoad(metrics.memory, 4);
+
+  /* Motor TTS informado por VoiceController vía window (Fase 3) */
+  const [ttsEngine, setTtsEngine] = useState("CHECKING…");
+  useEffect(() => {
+    const apply = () => {
+      const w = window as unknown as {
+        __jarvisTts?: { engine?: string; voiceName?: string | null };
+      };
+      const t = w.__jarvisTts;
+      if (!t) return;
+      if (t.engine === "elevenlabs") setTtsEngine("ELEVENLABS ONLINE");
+      else if (t.voiceName) setTtsEngine(t.voiceName.toUpperCase().slice(0, 24));
+      else if (t.engine === "native") setTtsEngine("WEB SPEECH API");
+    };
+    apply();
+    const id = setInterval(apply, 1500);
+    return () => clearInterval(id);
+  }, []);
 
   const time = now
     ? now.toLocaleTimeString("es-ES", { hour12: false })
@@ -133,11 +151,54 @@ export default function JarvisHUD() {
 
       {/* ================= Esquina inferior derecha ================= */}
       <div className="absolute bottom-4 right-4 space-y-1 text-right md:bottom-6 md:right-6">
+        <div className="flex items-center justify-end gap-2">
+          <TelemetryRow
+            label="Voice:"
+            value={
+              state === "listening"
+                ? "LISTENING"
+                : voiceActive
+                  ? "ARMED"
+                  : "STANDBY"
+            }
+            accent={
+              state === "listening"
+                ? "#ff6b00"
+                : voiceActive
+                  ? "#00ff9d"
+                  : "#8899aa"
+            }
+          />
+          {/* Indicador de micrófono activo (Fase 3) */}
+          {voiceActive && (
+            <span
+              aria-hidden
+              className={`inline-block h-2 w-2 rounded-full ${
+                state === "listening" ? "bg-listening" : "bg-system-ok"
+              }`}
+              style={{
+                animation: "jarvis-blink 1s steps(2, start) infinite",
+                boxShadow:
+                  state === "listening"
+                    ? "0 0 8px rgba(255,107,0,0.9)"
+                    : "0 0 8px rgba(0,255,157,0.9)",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Fase 3: estado del motor TTS (voz seleccionada / ElevenLabs) */}
         <TelemetryRow
-          label="Voice:"
-          value={state === "listening" ? "LISTENING" : "READY"}
-          accent={state === "listening" ? "#ff6b00" : "#00ff9d"}
+          label="TTS:"
+          value={ttsEngine}
+          accent={ttsEngine.includes("ONLINE") ? "#00ff9d" : undefined}
         />
+
+        {voiceError && (
+          <p className="max-w-[240px] truncate font-tech text-[10px] uppercase tracking-widest text-alert-warn md:text-xs">
+            ⚠ {voiceError}
+          </p>
+        )}
         <TelemetryRow label="Model:" value="GPT-4o" />
         <TelemetryRow
           label="Context:"

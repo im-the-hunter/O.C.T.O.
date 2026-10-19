@@ -1,30 +1,19 @@
-# Dependencias
-node_modules/
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-# Entorno / secretos
 .env
 .env.local
-.env.*.local
-
-# Builds
+*.env.*
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+node_modules/
 .next/
-out/
 dist/
 build/
-
-# Next.js
-next-env.d.ts
-*.tsbuildinfo
-
-# IDE / SO
 .vscode/
 .idea/
+*.swp
+*.swo
 .DS_Store
-
-# Logs
-*.log
-npm-debug.log*
+Thumbs.db

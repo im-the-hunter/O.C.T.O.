@@ -22,11 +22,23 @@ CONTEXTO DEL REPOSITORIO:
 
 class AgentService:
     def __init__(self) -> None:
-        self.llm = ChatOpenAI(
-            model=settings.openai_model,          # gpt-4o
-            temperature=0.7,
-            api_key=settings.openai_api_key,
-        )
+        # Inicialización perezosa del LLM: permite arrancar el backend sin
+        # OPENAI_API_KEY (modo degradado); se construye en el primer uso.
+        self._llm = None
+
+    @property
+    def llm(self):
+        if self._llm is None:
+            if not settings.openai_api_key:
+                raise RuntimeError(
+                    "OPENAI_API_KEY no está configurada; imposible inicializar GPT-4o."
+                )
+            self._llm = ChatOpenAI(
+                model=settings.openai_model,          # gpt-4o
+                temperature=0.7,
+                api_key=settings.openai_api_key,
+            )
+        return self._llm
         # Historial simple en memoria por sesión (la persistencia real va a PostgreSQL)
         self._histories: dict[str, list] = {}
 

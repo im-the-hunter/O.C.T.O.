@@ -26,7 +26,7 @@ from slowapi.util import get_remote_address
 
 from app.core.config import settings, validate_required_settings
 from app.core.database import close_db, init_db
-from app.routers import ai, github, memory
+from app.routers import ai, github, memory, rag
 from app.services.github_service import GitHubServiceError, github_service
 
 # ---------------------------------------------------------------------------
@@ -104,6 +104,7 @@ app.add_middleware(
 app.include_router(github.router, prefix="/api/github", tags=["GitHub"])
 app.include_router(github.webhook_router, tags=["Webhooks"])
 app.include_router(ai.router, prefix="/api/ai", tags=["IA"])
+app.include_router(rag.router, prefix="/api/rag", tags=["RAG"])
 app.include_router(memory.router, prefix="/api/memory", tags=["Memoria"])
 
 

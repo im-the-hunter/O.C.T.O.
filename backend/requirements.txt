@@ -1,0 +1,60 @@
+# ============================================================
+# Project J.A.R.V.I.S. - Backend (FastAPI) dependencies
+# ============================================================
+
+# --- Web framework / API ---
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+pydantic==2.7.4
+pydantic-settings==2.3.4
+email-validator==2.1.1
+
+# --- IA / LLMs ---
+openai==1.35.7
+langchain==0.2.6
+langchain-openai==0.1.14
+langchain-community==0.2.6
+langchain-core==0.2.11
+tiktoken==0.7.0
+
+# --- Base de datos vectorial (Pinecone) ---
+pinecone-client==3.2.2
+pinecone-text==0.9.0
+
+# --- Base de datos relacional (PostgreSQL) ---
+sqlalchemy==2.0.31
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+alembic==1.13.1
+pgvector==0.2.5
+
+# --- GitHub integration ---
+PyGithub==2.3.0
+github3.py==4.0.1
+GitPython==3.1.43
+
+# --- HTTP / Networking ---
+httpx==0.27.0
+aiohttp==3.9.5
+requests==2.32.3
+
+# --- Auth / Security ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+
+# --- Utilities ---
+tenacity==8.4.2
+orjson==3.10.5
+rich==13.7.1
+
+
+# --- RAG / Fase 5 ---
+rank-bm25==0.2.2        # opcional (implementamos BM25 propio; útil para experimentos)
+cohere==5.4.0           # re-ranking opcional (COHERE_API_KEY); el fallback heurístico no lo requiere
+redis==5.0.4            # backend de caché opcional (REDIS_URL)
+
+# --- Testing (opcional en esta fase) ---
+pytest==8.2.2
+pytest-asyncio==0.23.7

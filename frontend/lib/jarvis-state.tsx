@@ -50,6 +50,19 @@ interface JarvisContextValue {
   setMetrics: React.Dispatch<React.SetStateAction<HudMetrics>>;
   /** Incrementa tokens de contexto según el tamaño del último mensaje */
   bumpTokens: (text: string) => void;
+  /* ---- Fase 3: puente de voz ---- */
+  /** Texto parcial (interim) reconocido por el micrófono en tiempo real */
+  voiceInterim: string;
+  setVoiceInterim: (t: string) => void;
+  /** true si el sistema de voz está habilitado (wake word escuchando) */
+  voiceActive: boolean;
+  setVoiceActive: (v: boolean) => void;
+  /** Mensaje de error de voz mostrado en el HUD (null = sin error) */
+  voiceError: string | null;
+  setVoiceError: (e: string | null) => void;
+  /** Cola de respuesta pendiente que ChatPanel debe hablar con TTS */
+  pendingSpeech: string | null;
+  setPendingSpeech: (s: string | null) => void;
 }
 
 const JarvisContext = createContext<JarvisContextValue | null>(null);
@@ -83,6 +96,12 @@ export function JarvisProvider({ children }: { children: ReactNode }) {
   });
   const idRef = useRef(0);
 
+  /* ---- Estado de voz (Fase 3) ---- */
+  const [voiceInterim, setVoiceInterim] = useState("");
+  const [voiceActive, setVoiceActive] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [pendingSpeech, setPendingSpeech] = useState<string | null>(null);
+
   const addMessage = useCallback(
     (role: ChatMessage["role"], content: string) => {
       idRef.current += 1;
@@ -109,8 +128,16 @@ export function JarvisProvider({ children }: { children: ReactNode }) {
       metrics,
       setMetrics,
       bumpTokens,
+      voiceInterim,
+      setVoiceInterim,
+      voiceActive,
+      setVoiceActive,
+      voiceError,
+      setVoiceError,
+      pendingSpeech,
+      setPendingSpeech,
     }),
-    [state, messages, addMessage, metrics, bumpTokens]
+    [state, messages, addMessage, metrics, bumpTokens, voiceInterim, voiceActive, voiceError, pendingSpeech]
   );
 
   return (

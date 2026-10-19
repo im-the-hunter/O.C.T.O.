@@ -50,6 +50,8 @@ const config: Config = {
           warn: "#ffb347",
           critical: "#ff3b5c",
         },
+        // Naranja "listening" del micrófono (Fase 3 — coherente con el núcleo)
+        listening: "#ff6b00",
       },
       fontFamily: {
         display: ["var(--font-orbitron)", "var(--font-rajdhani)", "sans-serif"],

@@ -243,6 +243,41 @@ function JarvisCoreBase() {
           />
         </circle>
 
+        {/* Fase 3: ondas de voz — barras ecualizador cuando state === "speaking" */}
+        {state === "speaking" && (
+          <g stroke={cfg.color} strokeWidth={3} strokeLinecap="round" opacity={0.9}
+             filter="url(#soft-glow)">
+            {[-24, -12, 0, 12, 24].map((dx, i) => (
+              <line key={dx} x1={300 + dx} y1={330} x2={300 + dx} y2={346}>
+                <animate
+                  attributeName="y1"
+                  values="330;322;338;330"
+                  dur={`${0.5 + i * 0.11}s`}
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="y2"
+                  values="346;354;340;346"
+                  dur={`${0.5 + i * 0.11}s`}
+                  repeatCount="indefinite"
+                />
+              </line>
+            ))}
+          </g>
+        )}
+
+        {/* Fase 3: anillo de captura de micrófono cuando state === "listening" */}
+        {state === "listening" && (
+          <circle cx={300} cy={300} r={92} fill="none" stroke="#ff6b00"
+                  strokeWidth={1.5} strokeDasharray="3 7" opacity={0.8}>
+            <animateTransform
+              attributeName="transform" type="rotate"
+              from="0 300 300" to="360 300 300" dur="6s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        )}
+
         {/* Texto de estado bajo el núcleo */}
         <text
           x={300} y={395}

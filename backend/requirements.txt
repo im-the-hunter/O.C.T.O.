@@ -49,6 +49,12 @@ tenacity==8.4.2
 orjson==3.10.5
 rich==13.7.1
 
+
+# --- RAG / Fase 5 ---
+rank-bm25==0.2.2        # opcional (implementamos BM25 propio; útil para experimentos)
+cohere==5.4.0           # re-ranking opcional (COHERE_API_KEY); el fallback heurístico no lo requiere
+redis==5.0.4            # backend de caché opcional (REDIS_URL)
+
 # --- Testing (opcional en esta fase) ---
 pytest==8.2.2
 pytest-asyncio==0.23.7

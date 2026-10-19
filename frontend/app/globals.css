@@ -53,6 +53,22 @@ body {
   .text-glow-cyan-soft {
     text-shadow: 0 0 6px rgba(0, 243, 255, 0.45);
   }
+
+  .text-glow-red {
+    text-shadow: 0 0 8px rgba(255, 59, 92, 0.7), 0 0 20px rgba(255, 179, 71, 0.35);
+  }
+}
+
+/* ------------------------------------------------------------ */
+/* Fase 3 — modo claro (comando de voz "JARVIS, modo claro")     */
+/* ------------------------------------------------------------ */
+html.theme-light body {
+  filter: invert(0.92) hue-rotate(180deg);
+  background: #f2f5f8;
+}
+html.theme-light img,
+html.theme-light video {
+  filter: invert(1) hue-rotate(180deg); /* devuelve el color real a medios */
 }
 
 /* Keyframes en bruto para uso desde estilos inline (StatusIndicator) */

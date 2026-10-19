@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Project J.A.R.V.I.S. — Estilos globales del HUD sci-fi
+   ============================================================ */
+
+:root {
+  --jarvis-cyan: #00e5ff;
+  --jarvis-blue-deep: #0a1e3f;
+  --jarvis-violet: #8b5cf6;
+  --jarvis-bg: #030b14;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-void text-jarvis-light font-mono antialiased;
+  background-image: radial-gradient(ellipse at top, #071523 0%, #030b14 60%);
+  overflow-x: hidden;
+}
+
+/* Rejilla holográfica de fondo estilo HUD */
+.hud-background {
+  @apply bg-hud-grid bg-grid;
+}
+
+/* Paneles translúcidos con borde brillante */
+@layer components {
+  .hud-panel {
+    @apply rounded-lg border border-abyss-border bg-void-panel/70 shadow-inner-panel backdrop-blur-md;
+  }
+
+  .hud-panel-glow {
+    @apply hud-panel hover:shadow-glow-cyan transition-shadow duration-300;
+  }
+
+  .hud-text {
+    @apply font-hud uppercase tracking-[0.2em] text-jarvis;
+  }
+
+  .hud-button {
+    @apply rounded border border-jarvis-dim bg-abyss px-4 py-2 font-hud text-xs uppercase tracking-widest text-jarvis transition-all duration-200 hover:bg-jarvis/10 hover:shadow-glow-cyan active:scale-95;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.6), 0 0 24px rgba(0, 229, 255, 0.3);
+  }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--jarvis-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--jarvis-blue-deep);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--jarvis-cyan);
+}
+
+::selection {
+  background: rgba(0, 229, 255, 0.3);
+  color: #ffffff;
+}

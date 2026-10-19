@@ -52,8 +52,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        hud: ["var(--font-orbitron)", "monospace"],
-        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
+        display: ["var(--font-orbitron)", "var(--font-rajdhani)", "sans-serif"],
+        hud: ["var(--font-rajdhani)", "var(--font-inter)", "sans-serif"],
+        tech: ["var(--font-share-tech-mono)", "ui-monospace", "monospace"],
+        mono: ["var(--font-share-tech-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         "glow-cyan": "0 0 10px rgba(0,229,255,0.5), 0 0 30px rgba(0,229,255,0.25)",
@@ -97,6 +100,14 @@ const config: Config = {
           "0%": { transform: "translateY(-100%)" },
           "100%": { transform: "translateY(100vh)" },
         },
+        radarPulse: {
+          "0%, 100%": { opacity: "0.3" },
+          "50%": { opacity: "0.6" },
+        },
+        blink: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
         spinSlow: {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
@@ -109,7 +120,10 @@ const config: Config = {
       animation: {
         "pulse-glow": "pulseGlow 2.4s ease-in-out infinite",
         "radar-sweep": "radarSweep 4s linear infinite",
+        "radar-pulse": "radarPulse 4s ease-in-out infinite",
+        "jarvis-blink": "blink 1s steps(2, start) infinite",
         flicker: "flicker 6s linear infinite",
+        "jarvis-flicker": "flicker 1.5s linear infinite",
         scanline: "scanline 8s linear infinite",
         "spin-slow": "spinSlow 12s linear infinite",
         "spin-reverse": "spinReverse 8s linear infinite",

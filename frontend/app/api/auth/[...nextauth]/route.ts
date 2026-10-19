@@ -1,26 +1,8 @@
-import NextAuth from "next-auth";
-import GitHubProvider from "next-auth/providers/github";
-
 /**
- * Configuración de NextAuth.js (App Router).
- * Provider principal: GitHub (coherente con la integración del backend).
+ * Route handler de NextAuth.js (App Router).
+ * Sólo exporta GET/POST; la configuración vive en @/lib/auth/auth-options
+ * (los route handlers de Next 14 no permiten exports adicionales).
  */
-export const authOptions = {
-  providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID ?? "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: "/auth/signin",
-  },
-  session: {
-    strategy: "jwt" as const,
-  },
-};
-
-const handler = NextAuth(authOptions);
+import { handler } from "@/lib/auth/auth-options";
 
 export { handler as GET, handler as POST };

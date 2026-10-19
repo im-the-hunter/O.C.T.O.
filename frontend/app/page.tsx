@@ -1,30 +1,53 @@
 /**
- * Página principal del HUD de J.A.R.V.I.S.
- * Fase 1: estructura base. Los componentes del HUD, núcleo SVG y chat
- * se implementarán en las próximas fases.
+ * Página principal del HUD de J.A.R.V.I.S. (Fase 2)
+ * Composición: fondo con grid en perspectiva → partículas → núcleo →
+ * telemetría HUD → scanline → panel de chat (lateral en desktop,
+ * inferior en móvil).
  */
+import dynamic from "next/dynamic";
+import { JarvisProvider } from "@/lib/jarvis-state";
+import JarvisHUD from "@/components/hud/JarvisHUD";
+import HudBackground from "@/components/hud/HudBackground";
+import ScanLine from "@/components/hud/ScanLine";
+
+// El núcleo y las partículas usan canvas/GSAP: sólo cliente, sin SSR.
+const JarvisCore = dynamic(() => import("@/components/core/JarvisCore"), {
+  ssr: false,
+});
+const ParticleField = dynamic(() => import("@/components/core/ParticleField"), {
+  ssr: false,
+});
+const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel"), {
+  ssr: false,
+});
+
 export default function Home() {
   return (
-    <main className="hud-background relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-hud">
-      {/* Capa de rejilla holográfica */}
-      <div className="pointer-events-none absolute inset-0 bg-hud-grid bg-grid opacity-40" />
+    <JarvisProvider>
+      <main className="relative h-screen w-screen overflow-hidden bg-[#050505]">
+        {/* Capa 0: rejilla con perspectiva */}
+        <HudBackground />
 
-      {/* Contenedor del HUD (Fase 2: <JarvisCore />, <ChatPanel />, <HUDOverlay />) */}
-      <section className="hud-panel z-10 flex flex-col items-center gap-6 px-12 py-10">
-        <h1 className="hud-text text-glow text-3xl font-bold tracking-[0.4em] md:text-5xl">
-          J.A.R.V.I.S.
-        </h1>
-        <p className="max-w-md text-center text-xs uppercase tracking-widest text-abyss-light md:text-sm">
-          Sistema de inteligencia artificial listo. Esperando instrucciones, señor.
-        </p>
-        <div className="flex gap-4">
-          <button className="hud-button animate-flicker">Iniciar Sesión</button>
-          <button className="hud-button">Activar Voz</button>
+        {/* Capa 0.5: partículas orbitando el núcleo */}
+        <ParticleField />
+
+        {/* Capa 1: núcleo SVG centrado (desplazado a la izquierda en desktop
+            para compensar el panel de chat lateral de 400px) */}
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center lg:pr-[400px]">
+          <JarvisCore />
         </div>
-      </section>
 
-      {/* Línea de escaneo decorativa */}
-      <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-jarvis/30 shadow-glow-cyan animate-scanline" />
-    </main>
+        {/* Capa 2: telemetría en las 4 esquinas */}
+        <JarvisHUD />
+
+        {/* Capa 3: scanline global */}
+        <ScanLine />
+
+        {/* Capa 4: panel de chat — lateral derecho (desktop) / inferior (móvil) */}
+        <aside className="pointer-events-auto fixed bottom-0 right-0 z-50 h-[300px] w-full p-3 md:p-4 lg:bottom-0 lg:right-0 lg:h-full lg:w-[400px] lg:p-6">
+          <ChatPanel />
+        </aside>
+      </main>
+    </JarvisProvider>
   );
 }
